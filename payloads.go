@@ -5,6 +5,7 @@ package charm
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/juju/schema"
 )
@@ -14,6 +15,11 @@ var payloadClassSchema = schema.FieldMap(
 		"type": schema.String(),
 	},
 	schema.Defaults{},
+)
+
+var (
+	validPayloadName = regexp.MustCompile(`^([a-zA-Z](?:[\w-]*[a-zA-Z0-9]))$`)
+	validPayloadType = regexp.MustCompile(`^([a-zA-Z]+)$`)
 )
 
 // PayloadClass holds the information about a payload class, as stored
@@ -57,11 +63,19 @@ func parsePayloadClass(name string, data interface{}) PayloadClass {
 
 // Validate checks the payload class to ensure its data is valid.
 func (pc PayloadClass) Validate() error {
-	if pc.Name == "" {
-		return fmt.Errorf("payload class missing name")
+	if !validPayloadName.MatchString(pc.Name) {
+		if pc.Name == "" {
+			return fmt.Errorf("payload class missing name")
+		}
+		return fmt.Errorf("payload class name %q not valid", pc.Name)
 	}
-	if pc.Type == "" {
-		return fmt.Errorf("payload class missing type")
+
+	if !validPayloadType.MatchString(pc.Type) {
+		if pc.Type == "" {
+			return fmt.Errorf("payload class missing type")
+		}
+		return fmt.Errorf("payload class type %q not valid", pc.Type)
 	}
+
 	return nil
 }
